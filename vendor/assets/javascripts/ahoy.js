@@ -12,7 +12,7 @@
   "use strict";
 
   var config = {
-    urlPrefix: "",
+    urlPrefix: "http://localhost:3000",
     visitsUrl: "/ahoy/visits",
     eventsUrl: "/ahoy/events",
     cookieDomain: null,
@@ -24,7 +24,22 @@
 
   var ahoy = window.ahoy || window.Ahoy || {};
 
+  var $ = window.jQuery || window.Zepto || window.$;
+
   ahoy.configure = function (options) {
+
+    options = {
+      site: options.site,
+      urlPrefix: "http://localhost:3000",
+      visitsUrl: "/ahoy/visits",
+      eventsUrl: "/ahoy/events",
+      cookieDomain: null,
+      page: null,
+      platform: "Web",
+      useBeacon: false,
+      startOnReady: true
+    };
+
     for (var key in options) {
       if (options.hasOwnProperty(key)) {
         config[key] = options[key];
@@ -33,9 +48,8 @@
   };
 
   // legacy
-  ahoy.configure(ahoy);
+  // ahoy.configure(ahoy);
 
-  var $ = window.jQuery || window.Zepto || window.$;
   var visitId, visitorId, track;
   var visitTtl = 4 * 60; // 4 hours
   var visitorTtl = 2 * 365 * 24 * 60; // 2 years
@@ -243,6 +257,7 @@
         }
 
         var data = {
+          site: config.site,
           visit_token: visitId,
           visitor_token: visitorId,
           platform: config.platform,
@@ -292,6 +307,9 @@
   };
 
   ahoy.track = function (name, properties) {
+
+    properties.site = config.site;
+
     // generate unique id
     var event = {
       id: generateId(),

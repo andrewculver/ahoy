@@ -47,12 +47,22 @@ module Ahoy
               e.user = user if e.respond_to?(:user=)
               e.name = name
               e.properties = properties
+
+              # look up the site based on the uuid configured in the js.
+              e.site = Site.find_by_uuid(properties['site'])
+
               e.time = options[:time]
             end
 
           yield(event) if block_given?
 
           event.save!
+
+          visit = event.visit
+          unless visit.site
+            visit.site = event.site
+            visit.save
+          end
         end
       end
 
@@ -77,16 +87,7 @@ module Ahoy
       end
 
       def user
-        @user ||= begin
-          user_method = Ahoy.user_method
-          if user_method.respond_to?(:call)
-            user_method.call(controller)
-          elsif user_method
-            controller.send(user_method)
-          else
-            super
-          end
-        end
+        nil
       end
 
       class << self

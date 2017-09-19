@@ -31,7 +31,7 @@ module Ahoy
       end
 
       def user
-        @user ||= (controller.respond_to?(:current_user) && controller.current_user) || (controller.respond_to?(:current_resource_owner, true) && controller.send(:current_resource_owner)) || nil
+        nil
       end
 
       def exclude?
