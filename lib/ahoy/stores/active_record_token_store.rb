@@ -2,26 +2,6 @@ module Ahoy
   module Stores
     class ActiveRecordTokenStore < BaseStore
       def track_visit(options, &block)
-        @visit =
-          visit_model.new do |v|
-            v.visit_token = ahoy.visit_token
-            v.visitor_token = ahoy.visitor_token
-            v.user = user if v.respond_to?(:user=)
-            v.started_at = options[:started_at] if v.respond_to?(:started_at)
-            v.created_at = options[:started_at] if v.respond_to?(:created_at)
-          end
-
-        set_visit_properties(visit)
-
-        yield(visit) if block_given?
-
-        begin
-          visit.save!
-          geocode(visit)
-        rescue *unique_exception_classes
-          # reset to nil so subsequent calls to track_event will load visit from DB
-          @visit = nil
-        end
       end
 
       def track_event(name, properties, options, &block)
@@ -52,7 +32,7 @@ module Ahoy
               # look up the site based on the uuid configured in the js.
               e.site = Site.find_by_uuid(properties['site'])
               if e.site
-                e.visitor = e.site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
+                e.visitor = visitor
                 # if an email was specified, make sure we record that.
                 if properties['email'].present? && e.visitor.email != properties['email']
                   e.visitor.email = properties['email']
@@ -74,8 +54,40 @@ module Ahoy
         end
       end
 
+      def visitor
+        @visitor ||= e.site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
+      end
+
       def visit
+
         @visit ||= (visit_model.where(visit_token: ahoy.visit_token).first if ahoy.visit_token)
+
+        unless @visit
+
+          @visit =
+            visit_model.new do |v|
+              v.visitor = visitor
+              v.visit_token = ahoy.visit_token
+              v.visitor_token = ahoy.visitor_token
+              v.user = user if v.respond_to?(:user=)
+              v.started_at = options[:started_at] if v.respond_to?(:started_at)
+              v.created_at = options[:started_at] if v.respond_to?(:created_at)
+            end
+
+          set_visit_properties(visit)
+
+          yield(visit) if block_given?
+
+          begin
+            visit.save!
+            geocode(visit)
+          rescue *unique_exception_classes
+            # reset to nil so subsequent calls to track_event will load visit from DB
+            @visit = nil
+          end
+
+        end
+
       end
 
       def exclude?
