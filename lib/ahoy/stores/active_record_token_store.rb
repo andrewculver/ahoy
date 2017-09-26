@@ -23,7 +23,7 @@ module Ahoy
         else
           event =
             event_model.new do |e|
-              e.visit_id = visit.try(:id)
+              e.visit_id = visit(options).try(:id)
               e.user = user if e.respond_to?(:user=)
               e.name = name
               e.properties = properties
@@ -62,7 +62,7 @@ module Ahoy
         @visitor ||= Visitor.find_or_create_by(uuid: ahoy.visitor_token)
       end
 
-      def visit
+      def visit(options = {})
         @visit ||= (visit_model.where(visit_token: ahoy.visit_token).first if ahoy.visit_token)
 
         unless @visit
@@ -77,19 +77,21 @@ module Ahoy
               v.created_at = options[:started_at] if v.respond_to?(:created_at)
             end
 
-          set_visit_properties(visit)
+          set_visit_properties(@visit)
 
-          yield(visit) if block_given?
+          yield(@visit) if block_given?
 
           begin
-            visit.save!
-            geocode(visit)
+            @visit.save!
+            geocode(@visit)
           rescue *unique_exception_classes
             # reset to nil so subsequent calls to track_event will load visit from DB
             @visit = nil
           end
 
         end
+
+        @visit
 
       end
 
