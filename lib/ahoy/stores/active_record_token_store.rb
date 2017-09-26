@@ -133,7 +133,7 @@ module Ahoy
       end
 
       def event_model
-        ::Ahoy::Event
+        ::Event
       end
     end
   end
