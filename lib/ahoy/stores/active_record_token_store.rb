@@ -33,11 +33,15 @@ module Ahoy
               e.site = Site.find_by_uuid(properties['site'])
               if e.site
                 e.visitor = visitor
+                unless visitor.site_id
+                  e.visitor.site = e.site
+                end
                 # if an email was specified, make sure we record that.
                 if properties['email'].present? && e.visitor.email != properties['email']
                   e.visitor.email = properties['email']
-                  e.visitor.save
                 end
+                e.visitor.last_event_at = Time.zone.now
+                e.visitor.save
               end
 
             end
@@ -55,11 +59,10 @@ module Ahoy
       end
 
       def visitor
-        @visitor ||= e.site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
+        @visitor ||= Visitor.find_or_create_by(uuid: ahoy.visitor_token)
       end
 
       def visit
-
         @visit ||= (visit_model.where(visit_token: ahoy.visit_token).first if ahoy.visit_token)
 
         unless @visit
