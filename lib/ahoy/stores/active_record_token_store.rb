@@ -47,11 +47,19 @@ module Ahoy
               e.user = user if e.respond_to?(:user=)
               e.name = name
               e.properties = properties
+              e.time = options[:time]
 
               # look up the site based on the uuid configured in the js.
               e.site = Site.find_by_uuid(properties['site'])
+              if e.site
+                e.visitor = e.site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
+                # if an email was specified, make sure we record that.
+                if properties['email'].present? && e.visitor.email != properties['email']
+                  e.visitor.email = properties['email']
+                  e.visitor.save
+                end
+              end
 
-              e.time = options[:time]
             end
 
           yield(event) if block_given?

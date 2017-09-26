@@ -30,6 +30,7 @@
 
     options = {
       site: options.site,
+      email: options.email,
       urlPrefix: "http://localhost:3000",
       visitsUrl: "/ahoy/visits",
       eventsUrl: "/ahoy/events",
@@ -258,6 +259,7 @@
 
         var data = {
           site: config.site,
+          email: config.email,
           visit_token: visitId,
           visitor_token: visitorId,
           platform: config.platform,
@@ -309,6 +311,7 @@
   ahoy.track = function (name, properties) {
 
     properties.site = config.site;
+    properties.email = config.email;
 
     // generate unique id
     var event = {
