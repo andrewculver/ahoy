@@ -139,6 +139,16 @@
     });
   }
 
+  function generateVisitId() {
+    // alert('generateVisitId() returning: {{ahoy_visit}}');
+    return '{{ahoy_visit}}';
+  }
+
+  function generateVisitorId() {
+    // alert('generateVisitorId() returning: {{ahoy_visitor}}');
+    return '{{ahoy_visitor}}';
+  }
+
   function saveEventQueue() {
     // TODO add stringify method for IE 7 and under
     if (canStringify) {
@@ -244,7 +254,7 @@
       }
 
       if (!visitId) {
-        visitId = generateId();
+        visitId = generateVisitId();
         setCookie("ahoy_visit", visitId, visitTtl);
       }
 
@@ -253,7 +263,7 @@
         log("Visit started");
 
         if (!visitorId) {
-          visitorId = generateId();
+          visitorId = generateVisitorId();
           setCookie("ahoy_visitor", visitorId, visitorTtl);
         }
 
@@ -284,10 +294,12 @@
   }
 
   ahoy.getVisitId = ahoy.getVisitToken = function () {
+    // alert('ahoy.getVisitId() is returning: ' + getCookie("ahoy_visit"));
     return getCookie("ahoy_visit");
   };
 
   ahoy.getVisitorId = ahoy.getVisitorToken = function () {
+    // alert('ahoy.getVisitorId() is returning: ' + getCookie("ahoy_visitor"));
     return getCookie("ahoy_visitor");
   };
 
