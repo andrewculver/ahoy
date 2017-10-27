@@ -22,27 +22,19 @@ module Ahoy
           end
         else
           event =
-            event_model.new do |e|
+            site.events.new do |e|
               e.visit_id = visit(options).try(:id)
               e.user = user if e.respond_to?(:user=)
               e.name = name
               e.properties = properties
               e.time = options[:time]
-
-              # look up the site based on the uuid configured in the js.
-              e.site = Site.find_by_uuid(properties['site'])
-              if e.site
-                e.visitor = visitor
-                unless visitor.site_id
-                  e.visitor.site = e.site
-                end
-                # if an email was specified, make sure we record that.
-                if properties['email'].present? && e.visitor.email != properties['email']
-                  e.visitor.email = properties['email']
-                end
-                e.visitor.last_event_at = Time.zone.now
-                e.visitor.save
+              e.visitor = visitor
+              # if an email was specified, make sure we record that.
+              if properties['email'].present? && e.visitor.email != properties['email']
+                e.visitor.email = properties['email']
               end
+              e.visitor.last_event_at = Time.zone.now
+              e.visitor.save
 
             end
 
@@ -58,17 +50,21 @@ module Ahoy
         end
       end
 
+      def site
+        @site ||= Site.find_by(uuid: ahoy.request.params['events'].first['properties']['site'])
+      end
+
       def visitor
-        @visitor ||= Visitor.find_or_create_by(uuid: ahoy.visitor_token)
+        @visitor ||= site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
       end
 
       def visit(options = {})
-        @visit ||= (visit_model.where(visit_token: ahoy.visit_token).first if ahoy.visit_token)
+        @visit ||= (site.visits.where(visit_token: ahoy.visit_token).first if ahoy.visit_token)
 
         unless @visit
 
           @visit =
-            visit_model.new do |v|
+            site.visits.new do |v|
               v.visitor = visitor
               v.visit_token = ahoy.visit_token
               v.visitor_token = ahoy.visitor_token
@@ -128,12 +124,8 @@ module Ahoy
 
       protected
 
-      def visit_model
-        Ahoy.visit_model || ::Visit
-      end
-
       def event_model
-        ::Event
+        site.events
       end
     end
   end
