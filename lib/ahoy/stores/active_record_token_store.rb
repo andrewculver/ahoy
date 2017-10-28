@@ -21,6 +21,7 @@ module Ahoy
             $stderr.puts "No subscribers"
           end
         else
+
           event =
             site.events.new do |e|
               e.visit_id = visit(options).try(:id)
@@ -47,6 +48,7 @@ module Ahoy
             visit.site = event.site
             visit.save
           end
+
         end
       end
 
@@ -59,7 +61,8 @@ module Ahoy
           @visitor ||= site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
         rescue *unique_exception_classes
           puts "Apparently we've had a collision trying to create a new Visitor, so we'll just call this function again and it should find the other Visitor in the database now."
-          return visitor
+          @visitor = self.visitor or raise "Whatttt?!!! How is self.visitor returning nothing?"
+          return @visitor
         end
       end
 
@@ -87,7 +90,8 @@ module Ahoy
             geocode(@visit)
           rescue *unique_exception_classes
             puts "Apparently we've had a collision trying to create a new Visit, so we'll just call this function again and it should find the other Visit in the database now."
-            @visit = visit(options)
+            @visit = self.visit(options) or raise "Whatttt?! How is @visit not in the database?"
+            return @visit
           end
 
         end
