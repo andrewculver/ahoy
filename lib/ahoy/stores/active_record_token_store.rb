@@ -55,7 +55,12 @@ module Ahoy
       end
 
       def visitor
-        @visitor ||= site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
+        begin
+          @visitor ||= site.visitors.find_or_create_by(uuid: ahoy.visitor_token)
+        rescue *unique_exception_classes
+          puts "Apparently we've had a collision trying to create a new Visitor, so we'll just call this function again and it should find the other Visitor in the database now."
+          return visitor
+        end
       end
 
       def visit(options = {})
@@ -81,8 +86,8 @@ module Ahoy
             @visit.save!
             geocode(@visit)
           rescue *unique_exception_classes
-            # reset to nil so subsequent calls to track_event will load visit from DB
-            @visit = nil
+            puts "Apparently we've had a collision trying to create a new Visit, so we'll just call this function again and it should find the other Visit in the database now."
+            @visit = visit(options)
           end
 
         end
